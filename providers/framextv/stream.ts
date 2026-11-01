@@ -17,6 +17,7 @@ function isSupportedEmbed(value: string): boolean {
 
 export const getStream = async function ({
   link,
+  isDownload,
 }: {
   link: string;
   type: string;
@@ -24,10 +25,8 @@ export const getStream = async function ({
   providerContext: ProviderContext;
   isDownload?: boolean;
 }): Promise<Stream[]> {
-  // FrameXTV documents iframe embeds, not direct MP4/HLS media URLs.
-  // Return the supported embed as an iframe stream so Vega can render it
-  // in its embedded WebView player without mislabelling HTML as video.
-  if (!isSupportedEmbed(link)) return [];
+  // Iframe pages are for in-app playback only and are not downloadable files.
+  if (isDownload || !isSupportedEmbed(link)) return [];
   return [{
     server: "FrameXTV Embed",
     link,
