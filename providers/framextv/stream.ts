@@ -1,10 +1,22 @@
 import type { Stream, ProviderContext } from "../types";
 
+const FRAME_XTV_HOST = "framextv.xyz";
+
+function isSupportedEmbed(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname.toLowerCase() === FRAME_XTV_HOST &&
+      /^\/embed\/\d+(?:\/\d+\/\d+)?\/?$/.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const getStream = async function ({
   link,
-  type,
-  signal,
-  providerContext,
   isDownload,
 }: {
   link: string;
@@ -13,8 +25,11 @@ export const getStream = async function ({
   providerContext: ProviderContext;
   isDownload?: boolean;
 }): Promise<Stream[]> {
-  // FrameXTV's published integration is an iframe embed, not a direct media URL.
-  // The provider exposes that URL through Info.webUrl so Vega opens it in its
-  // in-app WebView. Do not mislabel an HTML page as an HLS/MP4 native stream.
-  return [];
+  // Iframe pages are for in-app playback only and are not downloadable files.
+  if (isDownload || !isSupportedEmbed(link)) return [];
+  return [{
+    server: "FrameXTV Embed",
+    link,
+    type: "iframe",
+  }];
 };
