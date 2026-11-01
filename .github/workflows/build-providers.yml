@@ -10,6 +10,14 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/build-providers.yml"
+  pull_request:
+    paths:
+      - "providers/**"
+      - "manifest.json"
+      - "build-bundled.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build-providers.yml"
   workflow_dispatch:
 
 permissions:
@@ -35,6 +43,7 @@ jobs:
         run: npm run build
 
       - name: Commit generated bundles
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
