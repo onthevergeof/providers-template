@@ -6,7 +6,7 @@ Movies and TV episodes are opened with FrameXTV's documented iframe embed URLs:
 - Movie: `https://framextv.xyz/embed/{TMDB_ID}`
 - Episode: `https://framextv.xyz/embed/{TMDB_ID}/{SEASON}/{EPISODE}`
 
-The provider returns these as `iframe` streams. Vega's embedded player must render this stream type in a WebView; the provider intentionally does not scrape, decrypt, or fabricate direct media URLs.
+The provider returns these as `iframe` streams. Install this provider with a Vega build that supports iframe streams in its embedded WebView player. The provider intentionally does not scrape, decrypt, or fabricate direct media URLs.
 
 TMDB attribution: This product uses the TMDB API but is not endorsed or certified by TMDB. TMDB data and images are subject to TMDB's terms and attribution requirements. This provider is not affiliated with TMDB or FrameXTV.
 
