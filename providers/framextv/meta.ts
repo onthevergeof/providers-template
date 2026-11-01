@@ -1,10 +1,17 @@
-import type { Info, ProviderContext } from "../types";
+import type { Info, Link, ProviderContext } from "../types";
 
 const TMDB_API = "https://api.themoviedb.org/3";
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
+const FRAME_XTV_EMBED = "https://framextv.xyz/embed";
 const NO_POSTER = "https://placehold.co/500x750?text=No+Poster";
 
 type MediaKind = "movie" | "tv";
+interface TmdbSeason {
+  id?: number;
+  name?: string;
+  season_number: number;
+  episode_count?: number;
+}
 interface TmdbDetails {
   id: number;
   title?: string;
@@ -17,10 +24,19 @@ interface TmdbDetails {
   vote_average?: number;
   genres?: { name: string }[];
   credits?: { cast?: { name: string }[] };
+  seasons?: TmdbSeason[];
 }
 
 function imageUrl(path?: string | null, size = "w500"): string {
   return path ? TMDB_IMAGE + "/" + size + path : NO_POSTER;
+}
+
+function movieEmbed(id: number): string {
+  return FRAME_XTV_EMBED + "/" + id;
+}
+
+function episodeEmbed(id: number, season: number, episode: number): string {
+  return FRAME_XTV_EMBED + "/" + id + "/" + season + "/" + episode;
 }
 
 async function tmdbRequest<T>(providerContext: ProviderContext, path: string): Promise<T> {
@@ -51,6 +67,27 @@ export const getMeta = async function ({
   const synopsis = details.overview?.trim() || "No synopsis is available from TMDB.";
   const attribution = "This product uses the TMDB API but is not endorsed or certified by TMDB.";
 
+  let linkList: Link[];
+  let webUrl: string | undefined;
+  if (kind === "movie") {
+    const embedUrl = movieEmbed(id);
+    linkList = [{
+      title: "Movie",
+      directLinks: [{ title: "Play", link: embedUrl, type: "movie" }],
+    }];
+    webUrl = embedUrl;
+  } else {
+    const seasons = (details.seasons || [])
+      .filter((season) => Number.isInteger(season.season_number) && season.season_number >= 0)
+      .sort((a, b) => a.season_number - b.season_number);
+    linkList = seasons.map((season) => ({
+      title: season.name?.trim() || "Season " + season.season_number,
+      episodesLink: "framextv://tv/" + id + "/" + season.season_number,
+    }));
+    const firstSeason = seasons[0]?.season_number;
+    if (firstSeason !== undefined) webUrl = episodeEmbed(id, firstSeason, 1);
+  }
+
   return {
     title,
     image: backdrop,
@@ -62,7 +99,7 @@ export const getMeta = async function ({
     tags: (details.genres || []).map((genre) => genre.name).filter(Boolean),
     cast: (details.credits?.cast || []).slice(0, 12).map((person) => person.name).filter(Boolean),
     rating: typeof details.vote_average === "number" ? details.vote_average.toFixed(1) + "/10" : undefined,
-    linkList: [],
-    webUrl: "https://framextv.xyz/embed/" + id,
+    linkList,
+    webUrl,
   };
 };
